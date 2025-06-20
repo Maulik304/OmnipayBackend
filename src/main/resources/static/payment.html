@@ -1,0 +1,46 @@
+<html>
+<head>
+    <title>EPX Browser Post</title>
+</head>
+<body>
+<h2>Pay with EPX Browser Post</h2>
+Amount: <input id="amount" type="text" value="100.00"><br><br>
+<button onclick="initiatePayment()">Pay Now</button>
+
+<form id="paymentForm" method="POST" style="display: none;"></form>
+
+<script>
+    async function initiatePayment() {
+        const amount = document.getElementById("amount").value;
+        const response = await fetch("http://localhost:8080/api/payment/initiate", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ amount })
+        });
+
+        const data = await response.json();
+        if (data.error) {
+            alert("Error: " + data.error);
+            return;
+        }
+
+        const form = document.getElementById("paymentForm");
+        form.innerHTML = "";
+        form.action = data.payment_url;
+        form.method = "POST";
+
+        for (const key in data) {
+            if (key !== "payment_url") {
+                const input = document.createElement("input");
+                input.type = "hidden";
+                input.name = key;
+                input.value = data[key];
+                form.appendChild(input);
+            }
+        }
+
+        form.submit();
+    }
+</script>
+</body>
+</html>
