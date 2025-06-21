@@ -21,7 +21,7 @@ public class PaymentController {
     private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(PaymentController.class);
     private final String keyExchangeUrl = "https://keyexch.epxuap.com/keyexch";
     private final String paymentUrl = "https://services.epxuap.com/browserpost/";
-    private final String redirectUrl = "https://payment.omnipossolution.com";
+    private final String redirectUrl = "https://omnipaybackend.onrender.com/api/payment/response";
 
     // Updated credentials and redirect URL from user
     private final String mac = "2ifP9bBSu9TrjMt8EPh1rGfJiZsfCb8Y";
@@ -29,6 +29,7 @@ public class PaymentController {
     private final String merchNbr = "900300";
     private final String dbaNbr = "2";
     private final String terminalNbr = "65";
+    private final String merchKey = "DDCDA119B0DF65ADE053320F180A89A3";
 
     // Utility method to extract TAC from XML
     private String extractTacFromXml(String xml) {

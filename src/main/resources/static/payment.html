@@ -12,7 +12,7 @@ Amount: <input id="amount" type="text" value="100.00"><br><br>
 <script>
     async function initiatePayment() {
         const amount = document.getElementById("amount").value;
-        const response = await fetch("http://localhost:8080/api/payment/initiate", {
+        const response = await fetch("https://omnipaybackend.onrender.com/api/payment/initiate", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ amount })
