@@ -30,6 +30,7 @@ public class PaymentController {
     private final String dbaNbr = "2";
     private final String terminalNbr = "65";
     private final String merchKey = "DDCDA119B0DF65ADE053320F180A89A3";
+    String tranNbr = UUID.randomUUID().toString().replaceAll("-", "").substring(0, 12);
 
     // Utility method to extract TAC from XML
     private String extractTacFromXml(String xml) {
@@ -56,7 +57,7 @@ public class PaymentController {
         MultiValueMap<String, String> formData = new LinkedMultiValueMap<>();
         formData.add("MAC", mac);
         formData.add("AMOUNT", String.format("%.2f", Double.parseDouble(amount)));
-        formData.add("TRAN_NBR", UUID.randomUUID().toString().replaceAll("-", "").substring(0, 12));
+        formData.add("TRAN_NBR",tranNbr );
         formData.add("TRAN_GROUP", "SALE");
         formData.add("REDIRECT_URL", redirectUrl);
         formData.add("CUST_NBR", custNbr);
