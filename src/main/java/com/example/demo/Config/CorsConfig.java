@@ -12,7 +12,10 @@ public class CorsConfig {
         return new WebMvcConfigurer() {
             @Override
             public void addCorsMappings(CorsRegistry registry) {
-                registry.addMapping("/**")
+                registry.addMapping("/**").allowedOrigins("http://localhost:8080",
+                        "http://localhost:63342",
+                        "https://omnipaybackend.onrender.com",
+                        "https://omnipossolution.com")
                         .allowedOrigins("*") // or use your actual origin
                         .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
                         .allowedHeaders("*");

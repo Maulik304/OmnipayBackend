@@ -18,7 +18,12 @@ import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/payment")
-@CrossOrigin(origins = {"http://localhost:8080", "http://localhost:63342", "null", "https://omnipaybackend.onrender.com"},
+@CrossOrigin(origins = {
+        "http://localhost:8080",      // For local backend testing (if you run backend locally)
+        "http://localhost:63342",     // For local frontend dev server like IntelliJ's
+        "https://omnipaybackend.onrender.com", // Your backend's own domain (if frontend is served from same domain/subdomain on Render)
+        "https://omnipossolution.com" // <--- CRITICAL: Your Hostinger frontend domain
+},
         methods = {RequestMethod.POST, RequestMethod.GET, RequestMethod.OPTIONS},
         allowedHeaders = "*",
         allowCredentials = "true",
