@@ -1,45 +1,104 @@
-<html>
+<!DOCTYPE html>
+<html lang="en">
 <head>
-    <title>EPX Browser Post</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EPX Browser Post Payment Demo</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .container { max-width: 500px; margin: auto; padding: 30px; border: 1px solid #ccc; border-radius: 8px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
+        label { display: block; margin-bottom: 5px; font-weight: bold; }
+        input[type="text"] { width: calc(100% - 20px); padding: 10px; margin-bottom: 20px; border: 1px solid #ddd; border-radius: 4px; }
+        button { background-color: #007bff; color: white; padding: 12px 20px; border: none; border-radius: 4px; cursor: pointer; font-size: 16px; width: 100%; }
+        button:hover { background-color: #0056b3; }
+        #messages { margin-top: 20px; padding: 10px; border-radius: 4px; }
+        .error { background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        .success { background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+    </style>
 </head>
 <body>
-<h2>Pay with EPX Browser Post</h2>
-Amount: <input id="amount" type="text" value="100.00"><br><br>
-<button onclick="initiatePayment()">Pay Now</button>
+<div class="container">
+    <h2>Pay with EPX Browser Post</h2>
 
-<form id="paymentForm" method="POST" style="display: none;"></form>
+    <div>
+        <label for="amount">Amount (e.g., 100.00):</label>
+        <input id="amount" type="text" value="100.00">
+    </div>
+
+    <button onclick="initiatePayment()">Pay Now</button>
+
+    <div id="messages"></div>
+
+    <form id="paymentForm" method="POST" style="display: none;"></form>
+</div>
 
 <script>
-    async function initiatePayment() {
-        const amount = document.getElementById("amount").value;
-        const response = await fetch("https://omnipaybackend.onrender.com/api/payment/initiate", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ amount })
-        });
+    const backendBaseUrl = "https://omnipaybackend.onrender.com"; // Replace with your actual backend URL
 
-        const data = await response.json();
-        if (data.error) {
-            alert("Error: " + data.error);
+    async function initiatePayment() {
+        const amountInput = document.getElementById("amount");
+        const messagesDiv = document.getElementById("messages");
+        messagesDiv.innerHTML = ""; // Clear previous messages
+        messagesDiv.className = ""; // Clear previous styling
+
+        const amount = amountInput.value.trim();
+
+        if (!amount) {
+            messagesDiv.className = "error";
+            messagesDiv.innerHTML = "Please enter an amount.";
             return;
         }
 
-        const form = document.getElementById("paymentForm");
-        form.innerHTML = "";
-        form.action = data.payment_url;
-        form.method = "POST";
+        try {
+            // Step 1: Call your backend to initiate payment and get EPX parameters (including TAC)
+            const response = await fetch(`${backendBaseUrl}/api/payment/initiate`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ amount: amount })
+            });
 
-        for (const key in data) {
-            if (key !== "payment_url") {
-                const input = document.createElement("input");
-                input.type = "hidden";
-                input.name = key;
-                input.value = data[key];
-                form.appendChild(input);
+            if (!response.ok) {
+                const errorData = await response.json();
+                messagesDiv.className = "error";
+                messagesDiv.innerHTML = `Error from backend: ${errorData.error || response.statusText}`;
+                console.error("Backend error:", errorData);
+                return;
             }
-        }
 
-        form.submit();
+            const data = await response.json();
+            if (data.error) {
+                messagesDiv.className = "error";
+                messagesDiv.innerHTML = `Backend returned an error: ${data.error}`;
+                return;
+            }
+
+            // Step 2: Dynamically create a form and submit it directly to EPX's browserpost URL
+            const form = document.getElementById("paymentForm");
+            form.innerHTML = ""; // Clear any previous inputs
+            form.action = data.payment_url; // EPX's Browser Post URL
+            form.method = "POST";
+
+            // Append all received data (except payment_url) as hidden inputs
+            for (const key in data) {
+                if (key !== "payment_url") {
+                    const input = document.createElement("input");
+                    input.type = "hidden";
+                    input.name = key;
+                    input.value = data[key];
+                    form.appendChild(input);
+                }
+            }
+
+            messagesDiv.className = "success";
+            messagesDiv.innerHTML = "Redirecting to payment page...";
+            // Submit the form, redirecting the user to EPX's hosted payment page
+            form.submit();
+
+        } catch (error) {
+            console.error("Payment initiation failed:", error);
+            messagesDiv.className = "error";
+            messagesDiv.innerHTML = `An unexpected error occurred: ${error.message}. Please check console for details.`;
+        }
     }
 </script>
 </body>
