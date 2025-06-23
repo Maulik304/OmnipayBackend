@@ -30,7 +30,7 @@ public class PaymentController {
     private final String dbaNbr = "2";
     private final String terminalNbr = "65";
     private final String merchKey = "DDCDA119B0DF65ADE053320F180A89A3";
-    String tranNbr = UUID.randomUUID().toString().replaceAll("-", "").substring(0, 12);
+
 
     // Utility method to extract TAC from XML
     private String extractTacFromXml(String xml) {
@@ -53,11 +53,12 @@ public class PaymentController {
             return ResponseEntity.badRequest().body(Map.of("error", "Amount is required"));
         }
 
-        // 1. Prepare form data for key exchange
+        String tranNbr = UUID.randomUUID().toString().replaceAll("-", "").substring(0, 12);
+
         MultiValueMap<String, String> formData = new LinkedMultiValueMap<>();
         formData.add("MAC", mac);
         formData.add("AMOUNT", String.format("%.2f", Double.parseDouble(amount)));
-        formData.add("TRAN_NBR",tranNbr );
+        formData.add("TRAN_NBR", tranNbr);
         formData.add("TRAN_GROUP", "SALE");
         formData.add("REDIRECT_URL", redirectUrl);
         formData.add("CUST_NBR", custNbr);
@@ -93,6 +94,9 @@ public class PaymentController {
         paymentData.put("payment_url", paymentUrl);
         paymentData.put("TAC", tac);
         paymentData.put("TRAN_CODE", "SALE");
+        paymentData.put("TRAN_TYPE", "CREDIT"); // ✅ Important
+        paymentData.put("TRAN_NBR", tranNbr);    // ✅ Reuse same TRAN_NBR
+        paymentData.put("REDIRECT_URL", redirectUrl); // ✅ Must be included
         paymentData.put("CUST_NBR", custNbr);
         paymentData.put("MERCH_NBR", merchNbr);
         paymentData.put("DBA_NBR", dbaNbr);
@@ -105,6 +109,7 @@ public class PaymentController {
 
         return ResponseEntity.ok(paymentData);
     }
+
 
     @PostMapping("/response")
     public ResponseEntity<String> handlePaymentResponse(@RequestParam Map<String, String> responseParams) {
