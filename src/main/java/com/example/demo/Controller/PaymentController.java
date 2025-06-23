@@ -1,6 +1,7 @@
 package com.example.demo.Controller;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
@@ -17,27 +18,33 @@ import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/payment")
+@CrossOrigin(origins = {"http://localhost:8080", "http://localhost:63342", "null", "https://omnipaybackend.onrender.com"},
+        methods = {RequestMethod.POST, RequestMethod.GET, RequestMethod.OPTIONS},
+        allowedHeaders = "*",
+        allowCredentials = "true",
+        maxAge = 3600)
 public class PaymentController {
     private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(PaymentController.class);
     private final String keyExchangeUrl = "https://keyexch.epxuap.com/keyexch";
     private final String paymentUrl = "https://services.epxuap.com/browserpost/";
-    // IMPORTANT: This URL must be publicly accessible by EPX for redirection.
-    // If testing locally, use ngrok or similar tunneling service.
-    private final String redirectUrl = "https://omnipaybackend.onrender.com/api/payment/response"; // Replace with your actual deployed URL
+    private final String redirectUrl = "https://omnipaybackend.onrender.com/api/payment/response"; // Your actual deployed URL
 
-    // Your EPX Credentials (replace with your actual merchant credentials)
-    // These should ideally be loaded from environment variables or a secure configuration system,
-    // not hardcoded in production.
-    private final String mac = "2ifP9bBSu9TrjMt8EPh1rGfJiZsfCb8Y";
-    private final String custNbr = "9001";
-    private final String merchNbr = "900300";
-    private final String dbaNbr = "2";
-    private final String terminalNbr = "65";
-    // private final String merchKey = "DDCDA119B0DF65ADE053320F180A89A3"; // Not directly used in Browser Post flow
+    // Your EPX Credentials (inject from application.properties or environment variables)
+    @Value("${epx.mac}")
+    private String mac;
+    @Value("${epx.custNbr}")
+    private String custNbr;
+    @Value("${epx.merchNbr}")
+    private String merchNbr;
+    @Value("${epx.dbaNbr}")
+    private String dbaNbr;
+    @Value("${epx.terminalNbr}")
+    private String terminalNbr;
+    // @Value("${epx.merchKey}") // Not directly used in Browser Post for transaction processing
+    // private String merchKey;
 
     private final RestTemplate restTemplate;
 
-    // Constructor for dependency injection of RestTemplate
     public PaymentController(RestTemplate restTemplate) {
         this.restTemplate = restTemplate;
     }
@@ -59,22 +66,30 @@ public class PaymentController {
     /**
      * Initiates the payment process by requesting a TAC from EPX.
      * This endpoint is called from your frontend.
-     * @param req A map containing the "amount".
+     * @param req A map containing "amount", "accountNumber", "cvv", and "expirationDate".
      * @return A ResponseEntity containing the payment URL and other parameters
      * needed for the frontend to perform the Browser Post.
      */
     @PostMapping("/initiate")
     public ResponseEntity<Map<String, String>> initiatePayment(@RequestBody Map<String, String> req) {
         String amountStr = req.get("amount");
-        if (amountStr == null || amountStr.isEmpty()) {
-            return ResponseEntity.badRequest().body(Map.of("error", "Amount is required"));
+        String accountNumber = req.get("accountNumber");
+        String cvv = req.get("cvv");
+        String expirationDate = req.get("expirationDate");
+
+        // Basic validation for required fields
+        if (amountStr == null || amountStr.isEmpty() ||
+                accountNumber == null || accountNumber.isEmpty() ||
+                cvv == null || cvv.isEmpty() ||
+                expirationDate == null || expirationDate.isEmpty()) {
+            return ResponseEntity.badRequest().body(Map.of("error", "Amount, Account Number, CVV, and Expiration Date are required."));
         }
 
         double amount;
         try {
             amount = Double.parseDouble(amountStr);
         } catch (NumberFormatException e) {
-            return ResponseEntity.badRequest().body(Map.of("error", "Invalid amount format"));
+            return ResponseEntity.badRequest().body(Map.of("error", "Invalid amount format."));
         }
 
         String tranNbr = UUID.randomUUID().toString().replaceAll("-", "").substring(0, 12); // Unique transaction number
@@ -118,7 +133,8 @@ public class PaymentController {
         }
 
         // --- Step 2: Prepare data to send back to frontend for Browser Post ---
-        // These are the parameters the *frontend* will submit directly to EPX's browserpost URL.
+        // THESE ARE THE PARAMETERS THE *FRONTEND* WILL SUBMIT DIRECTLY TO EPX's browserpost URL.
+        // AS PER YOUR GUIDE, THIS NOW INCLUDES SENSITIVE CARD DATA.
         Map<String, String> paymentDataForFrontend = new HashMap<>();
         paymentDataForFrontend.put("payment_url", paymentUrl); // The URL the frontend will post to
         paymentDataForFrontend.put("TAC", tac);                // The essential TAC obtained
@@ -133,10 +149,15 @@ public class PaymentController {
         paymentDataForFrontend.put("AMOUNT", String.format("%.2f", amount));
         paymentDataForFrontend.put("INDUSTRY_TYPE", "E");      // E-commerce transaction
 
-        // DO NOT include sensitive card data (like ACCOUNT_NBR, CVV2, EXP_DATE) here.
-        // These are collected securely on the EPX hosted payment page.
+        // ******************************************************************************
+        // * IMPORTANT: AS PER EPX GUIDE, THESE ARE REQUIRED FOR CREDIT CARD TRANSACTIONS *
+        // * YOUR APPLICATION WILL BE HANDLING SENSITIVE CARD DATA. ENSURE PCI DSS COMPLIANCE. *
+        // ******************************************************************************
+        paymentDataForFrontend.put("ACCOUNT_NBR", accountNumber);
+        paymentDataForFrontend.put("CVV2", cvv);
+        paymentDataForFrontend.put("EXP_DATE", expirationDate); // Format: MMYY (e.g., 1226 for Dec 2026)
 
-        log.info("Successfully generated TAC and preparing data for frontend Browser Post.");
+        log.info("Successfully generated TAC and preparing data for frontend Browser Post (including sensitive data): {}", paymentDataForFrontend);
         return ResponseEntity.ok(paymentDataForFrontend);
     }
 
@@ -151,20 +172,13 @@ public class PaymentController {
         log.info("✅ EPX Payment Response Received:");
         responseParams.forEach((key, value) -> log.info("  {} = {}", key, value));
 
-        // Basic verification of the response.
-        // In a real application, you would perform more robust checks:
-        // 1. Verify `MAC` if EPX provides it in the response (compare with your calculated MAC).
-        // 2. Check `RESP_CODE` for success (e.g., "00" for approved).
-        // 3. Store transaction status in your database.
-        // 4. Update order status for the corresponding `TRAN_NBR`.
-
-        String respCode = responseParams.get("RESP_CODE");
-        String respText = responseParams.get("RESP_TEXT");
+        String respCode = responseParams.get("AUTH_RESP"); // Per guide: AUTH_RESP for response code
+        String respText = responseParams.get("AUTH_RESP_TEXT"); // Per guide: AUTH_RESP_TEXT for response text
         String authCode = responseParams.get("AUTH_CODE"); // Authorization code
         String tranNbr = responseParams.get("TRAN_NBR"); // Original transaction number
 
         String htmlResponse;
-        if ("00".equals(respCode)) {
+        if ("00".equals(respCode)) { // "00" indicates approval per guide's example
             log.info("Payment for TRAN_NBR {} was SUCCESSFUL. Auth Code: {}", tranNbr, authCode);
             htmlResponse = "<html><body><h2>✅ Payment Successful!</h2>" +
                     "<p>Transaction Number: " + tranNbr + "</p>" +
@@ -180,8 +194,6 @@ public class PaymentController {
                     "<p>Please try again or contact support.</p></body></html>";
         }
 
-        // You might want to redirect the user to a more user-friendly success/failure page
-        // on your website instead of directly returning HTML here.
         return ResponseEntity.ok(htmlResponse);
     }
 }

@@ -14,6 +14,9 @@
         #messages { margin-top: 20px; padding: 10px; border-radius: 4px; }
         .error { background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
         .success { background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .card-details-group { display: flex; justify-content: space-between; gap: 10px; }
+        .card-details-group > div { flex: 1; }
+        .card-details-group input { width: 100%; }
     </style>
 </head>
 <body>
@@ -23,6 +26,22 @@
     <div>
         <label for="amount">Amount (e.g., 100.00):</label>
         <input id="amount" type="text" value="100.00">
+    </div>
+
+    <div>
+        <label for="accountNumber">Card Number:</label>
+        <input id="accountNumber" type="text" value="4111111111111111" placeholder="Enter 16-digit card number">
+    </div>
+
+    <div class="card-details-group">
+        <div>
+            <label for="expirationDate">Expiration Date (MMYY):</label>
+            <input id="expirationDate" type="text" value="1226" placeholder="MMYY">
+        </div>
+        <div>
+            <label for="cvv">CVV:</label>
+            <input id="cvv" type="text" value="123" placeholder="CVV">
+        </div>
     </div>
 
     <button onclick="initiatePayment()">Pay Now</button>
@@ -37,31 +56,60 @@
 
     async function initiatePayment() {
         const amountInput = document.getElementById("amount");
+        const accountNumberInput = document.getElementById("accountNumber");
+        const expirationDateInput = document.getElementById("expirationDate");
+        const cvvInput = document.getElementById("cvv");
         const messagesDiv = document.getElementById("messages");
         messagesDiv.innerHTML = ""; // Clear previous messages
         messagesDiv.className = ""; // Clear previous styling
 
         const amount = amountInput.value.trim();
+        const accountNumber = accountNumberInput.value.trim();
+        const expirationDate = expirationDateInput.value.trim();
+        const cvv = cvvInput.value.trim();
 
-        if (!amount) {
+        if (!amount || !accountNumber || !expirationDate || !cvv) {
             messagesDiv.className = "error";
-            messagesDiv.innerHTML = "Please enter an amount.";
+            messagesDiv.innerHTML = "All payment fields (Amount, Card Number, Expiration Date, CVV) are required.";
             return;
         }
+
+        // Basic validation (you should add more robust validation)
+        if (!/^\d{16}$/.test(accountNumber)) {
+            messagesDiv.className = "error";
+            messagesDiv.innerHTML = "Invalid Card Number. Must be 16 digits.";
+            return;
+        }
+        if (!/^\d{4}$/.test(expirationDate)) {
+            messagesDiv.className = "error";
+            messagesDiv.innerHTML = "Invalid Expiration Date. Must be MMYY (e.g., 1226).";
+            return;
+        }
+        if (!/^\d{3,4}$/.test(cvv)) {
+            messagesDiv.className = "error";
+            messagesDiv.innerHTML = "Invalid CVV. Must be 3 or 4 digits.";
+            return;
+        }
+
 
         try {
             // Step 1: Call your backend to initiate payment and get EPX parameters (including TAC)
             const response = await fetch(`${backendBaseUrl}/api/payment/initiate`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ amount: amount })
+                body: JSON.stringify({
+                    amount: amount,
+                    accountNumber: accountNumber,
+                    expirationDate: expirationDate,
+                    cvv: cvv
+                })
             });
 
             if (!response.ok) {
                 const errorData = await response.json();
                 messagesDiv.className = "error";
                 messagesDiv.innerHTML = `Error from backend: ${errorData.error || response.statusText}`;
-                console.error("Backend error:", errorData);
+                console.error("Backend error response:", errorData);
                 return;
             }
 
