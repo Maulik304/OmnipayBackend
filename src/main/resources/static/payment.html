@@ -54,103 +54,108 @@
 <script>
     const backendBaseUrl = "https://omnipaybackend.onrender.com"; // Replace with your actual backend URL
 
-    async function initiatePayment() {
-        const amountInput = document.getElementById("amount");
-        const accountNumberInput = document.getElementById("accountNumber");
-        const expirationDateInput = document.getElementById("expirationDate");
-        const cvvInput = document.getElementById("cvv");
-        const messagesDiv = document.getElementById("messages");
-        messagesDiv.innerHTML = "";
-        messagesDiv.className = "";
+   async function initiatePayment() {
+    const amountInput = document.getElementById("amount");
+    const accountNumberInput = document.getElementById("accountNumber");
+    const expirationDateInput = document.getElementById("expirationDate");
+    const cvvInput = document.getElementById("cvv");
+    const messagesDiv = document.getElementById("messages");
+    messagesDiv.innerHTML = "";
+    messagesDiv.className = "";
 
-        const amount = amountInput.value.trim();
-        const accountNumber = accountNumberInput.value.trim();
-        let rawExp = expirationDateInput.value.trim();
-        const cvv = cvvInput.value.trim();
+    const amount = amountInput.value.trim();
+    const accountNumber = accountNumberInput.value.trim();
+    let rawExp = expirationDateInput.value.trim().replace(/\s/g, "").replace("/", "");
+    const cvv = cvvInput.value.trim();
 
-        if (!amount || !accountNumber || !rawExp || !cvv) {
-            messagesDiv.className = "error";
-            messagesDiv.innerHTML = "All payment fields (Amount, Card Number, Expiration Date, CVV) are required.";
-            return;
-        }
-
-        // Fix: Pad expiration to 4 digits if needed
-        if (rawExp.length === 3) rawExp = "0" + rawExp;
-
-        const month = rawExp.slice(0, 2);
-        const year = rawExp.slice(2, 4);
-
-        // Validate card fields
-        if (!/^\d{16}$/.test(accountNumber)) {
-            messagesDiv.className = "error";
-            messagesDiv.innerHTML = "Invalid Card Number. Must be 16 digits.";
-            return;
-        }
-        if (!/^(0[1-9]|1[0-2])$/.test(month) || !/^\d{2}$/.test(year)) {
-            messagesDiv.className = "error";
-            messagesDiv.innerHTML = "Invalid Expiration Date. Format must be MMYY (e.g., 0126).";
-            return;
-        }
-        if (!/^\d{3,4}$/.test(cvv)) {
-            messagesDiv.className = "error";
-            messagesDiv.innerHTML = "Invalid CVV. Must be 3 or 4 digits.";
-            return;
-        }
-
-        const expirationDate = month + year;
-
-        try {
-            const response = await fetch(`${backendBaseUrl}/api/payment/initiate`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    amount: amount,
-                    accountNumber: accountNumber,
-                    expirationDate: expirationDate,
-                    cvv: cvv
-                })
-            });
-
-            if (!response.ok) {
-                const errorData = await response.json();
-                messagesDiv.className = "error";
-                messagesDiv.innerHTML = `Error from backend: ${errorData.error || response.statusText}`;
-                console.error("Backend error response:", errorData);
-                return;
-            }
-
-            const data = await response.json();
-            if (data.error) {
-                messagesDiv.className = "error";
-                messagesDiv.innerHTML = `Backend returned an error: ${data.error}`;
-                return;
-            }
-
-            const form = document.getElementById("paymentForm");
-            form.innerHTML = "";
-            form.action = data.payment_url;
-            form.method = "POST";
-
-            for (const key in data) {
-                if (key !== "payment_url") {
-                    const input = document.createElement("input");
-                    input.type = "hidden";
-                    input.name = key;
-                    input.value = data[key];
-                    form.appendChild(input);
-                }
-            }
-
-            messagesDiv.className = "success";
-            messagesDiv.innerHTML = "Redirecting to payment page...";
-            form.submit();
-
-        } catch (error) {
-            console.error("Payment initiation failed:", error);
-            messagesDiv.className = "error";
-            messagesDiv.innerHTML = `Unexpected error: ${error.message}.`;
-        }
+    if (!amount || !accountNumber || !rawExp || !cvv) {
+        messagesDiv.className = "error";
+        messagesDiv.innerHTML = "All payment fields (Amount, Card Number, Expiration Date, CVV) are required.";
+        return;
     }
+
+    if (!/^\d{4}$/.test(rawExp)) {
+        messagesDiv.className = "error";
+        messagesDiv.innerHTML = "Invalid Expiration Date. Use MMYY or MM/YY format (e.g., 12/29).";
+        return;
+    }
+
+    const month = rawExp.slice(0, 2);
+    const year = rawExp.slice(2, 4);
+
+    if (!/^\d{16}$/.test(accountNumber)) {
+        messagesDiv.className = "error";
+        messagesDiv.innerHTML = "Invalid Card Number. Must be 16 digits.";
+        return;
+    }
+
+    if (!/^(0[1-9]|1[0-2])$/.test(month) || !/^\d{2}$/.test(year)) {
+        messagesDiv.className = "error";
+        messagesDiv.innerHTML = "Invalid Expiration Date. Format must be MMYY (e.g., 0126).";
+        return;
+    }
+
+    if (!/^\d{3,4}$/.test(cvv)) {
+        messagesDiv.className = "error";
+        messagesDiv.innerHTML = "Invalid CVV. Must be 3 or 4 digits.";
+        return;
+    }
+
+    const expirationDate = month + year;
+
+    try {
+        const response = await fetch(`${backendBaseUrl}/api/payment/initiate`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                amount: amount,
+                accountNumber: accountNumber,
+                expirationDate: expirationDate,
+                cvv: cvv
+            })
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json();
+            messagesDiv.className = "error";
+            messagesDiv.innerHTML = `Error from backend: ${errorData.error || response.statusText}`;
+            console.error("Backend error response:", errorData);
+            return;
+        }
+
+        const data = await response.json();
+        if (data.error) {
+            messagesDiv.className = "error";
+            messagesDiv.innerHTML = `Backend returned an error: ${data.error}`;
+            return;
+        }
+
+        const form = document.getElementById("paymentForm");
+        form.innerHTML = "";
+        form.action = data.payment_url;
+        form.method = "POST";
+
+        for (const key in data) {
+            if (key !== "payment_url") {
+                const input = document.createElement("input");
+                input.type = "hidden";
+                input.name = key;
+                input.value = data[key];
+                form.appendChild(input);
+            }
+        }
+
+        messagesDiv.className = "success";
+        messagesDiv.innerHTML = "Redirecting to payment page...";
+        form.submit();
+
+    } catch (error) {
+        console.error("Payment initiation failed:", error);
+        messagesDiv.className = "error";
+        messagesDiv.innerHTML = `Unexpected error: ${error.message}.`;
+    }
+}
+
 </script>
 </body>
 </html>
