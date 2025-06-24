@@ -88,7 +88,9 @@ public class PaymentController {
             return ResponseEntity.badRequest().body(Map.of("error", "Invalid amount format."));
         }
 
-        String tranNbr = UUID.randomUUID().toString().replaceAll("-", "").substring(0, 12); // Unique transaction number
+        // ✅ EPX-compliant 10-digit numeric TRAN_NBR
+        long timestamp = System.currentTimeMillis() % 1_000_000_000L;
+        String tranNbr = String.format("%010d", timestamp); // Always 10-digit numeric
 
         // --- Step 1: Prepare and send request to EPX Key Exchange for TAC ---
         MultiValueMap<String, String> formDataForTac = new LinkedMultiValueMap<>();
