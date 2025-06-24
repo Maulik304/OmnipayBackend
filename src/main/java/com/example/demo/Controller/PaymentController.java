@@ -149,9 +149,13 @@ public class PaymentController {
         // * IMPORTANT: AS PER EPX GUIDE, THESE ARE REQUIRED FOR CREDIT CARD TRANSACTIONS *
         // * YOUR APPLICATION WILL BE HANDLING SENSITIVE CARD DATA. ENSURE PCI DSS COMPLIANCE. *
         // ******************************************************************************
+        String expMonth = expirationDate.substring(0, 2);
+        String expYear = expirationDate.substring(2, 4);
+        String expDateEpxFormat = expYear + expMonth;
+
         paymentDataForFrontend.put("ACCOUNT_NBR", accountNumber);
         paymentDataForFrontend.put("CVV2", cvv);
-        paymentDataForFrontend.put("EXP_DATE", expirationDate); // Format: MMYY (e.g., 1226 for Dec 2026)
+        paymentDataForFrontend.put("EXP_DATE", expDateEpxFormat); // Format: MMYY (e.g., 1226 for Dec 2026)
 
         log.info("Successfully generated TAC and preparing data for frontend Browser Post (including sensitive data): {}", paymentDataForFrontend);
         return ResponseEntity.ok(paymentDataForFrontend);
