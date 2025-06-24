@@ -192,4 +192,10 @@ public class PaymentController {
 
         return ResponseEntity.ok(htmlResponse);
     }
+    @GetMapping("/response")
+    public ResponseEntity<String> handleGetResponse() {
+        return ResponseEntity.status(HttpStatus.METHOD_NOT_ALLOWED)
+                .body("This endpoint only accepts POST requests for payment response.");
+    }
+
 }
