@@ -55,6 +55,19 @@
             <input id="cvv" type="text" value="123" placeholder="CVV">
         </div>
     </div>
+
+    <div class="card-details-group">
+        <div>
+            <label for="streetAddress">Street Address:</label>
+            <input id="streetAddress" type="text" value="123 Main St" placeholder="Street address">
+        </div>
+        <div>
+            <label for="zipCode">ZIP Code:</label>
+            <input id="zipCode" type="text" value="12345" placeholder="ZIP Code">
+        </div>
+    </div>
+
+</div>
     </div>
 
 <div class="button-wrapper">
@@ -74,6 +87,8 @@
     const accountNumberInput = document.getElementById("accountNumber");
     const expirationDateInput = document.getElementById("expirationDate");
     const cvvInput = document.getElementById("cvv");
+    const streetAddressInput = document.getElementById("streetAddress");
+    const zipCodeInput = document.getElementById("zipCode");
     const messagesDiv = document.getElementById("messages");
     messagesDiv.innerHTML = "";
     messagesDiv.className = "";
@@ -82,6 +97,8 @@
     const accountNumber = accountNumberInput.value.trim();
     let rawExp = expirationDateInput.value.trim().replace(/\s/g, "").replace("/", "");
     const cvv = cvvInput.value.trim();
+    const streetAddress = streetAddressInput.value.trim();  // ✅ added
+    const zipCode = zipCodeInput.value.trim();
 
     if (!amount || !accountNumber || !rawExp || !cvv) {
         messagesDiv.className = "error";
@@ -129,7 +146,9 @@
                 amount: amount,
                 accountNumber: accountNumber,
                 expirationDate: expirationDate,
-                cvv: cvv
+                cvv: cvv,
+                streetAddress: streetAddress,
+                zipCode: zipCode
             })
         });
 

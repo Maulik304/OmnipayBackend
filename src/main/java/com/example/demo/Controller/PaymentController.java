@@ -72,6 +72,9 @@ public class PaymentController {
         String accountNumber = req.get("accountNumber");
         String cvv = req.get("cvv");
         String expirationDate = req.get("expirationDate");
+        String streetAddress = req.get("streetAddress");
+        String zipCode = req.get("zipCode");
+
 
         // Basic validation for required fields
         if (amountStr == null || amountStr.isEmpty() ||
@@ -157,7 +160,10 @@ public class PaymentController {
 
         paymentDataForFrontend.put("ACCOUNT_NBR", accountNumber);
         paymentDataForFrontend.put("CVV2", cvv);
-        paymentDataForFrontend.put("EXP_DATE", expDateEpxFormat); // Format: MMYY (e.g., 1226 for Dec 2026)
+        paymentDataForFrontend.put("EXP_DATE", expDateEpxFormat);
+        paymentDataForFrontend.put("STREET_ADDR", streetAddress); // Required for AVS match
+        paymentDataForFrontend.put("ZIP_CODE", zipCode);           // Required for AVS match
+// Format: MMYY (e.g., 1226 for Dec 2026)
 
         log.info("Successfully generated TAC and preparing data for frontend Browser Post (including sensitive data): {}", paymentDataForFrontend);
         return ResponseEntity.ok(paymentDataForFrontend);
