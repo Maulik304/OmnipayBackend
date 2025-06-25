@@ -83,11 +83,12 @@
     const month = rawExp.slice(0, 2);
     const year = rawExp.slice(2, 4);
 
-    if (!/^\d{16}$/.test(accountNumber)) {
-        messagesDiv.className = "error";
-        messagesDiv.innerHTML = "Invalid Card Number. Must be 16 digits.";
-        return;
-    }
+    if (!/^([0-9*]){4,19}$/.test(accountNumber)) {
+    messagesDiv.className = "error";
+    messagesDiv.innerHTML = "Invalid Card Number. Must be 4–19 digits (digits or * allowed).";
+    return;
+}
+
 
     if (!/^(0[1-9]|1[0-2])$/.test(month) || !/^\d{2}$/.test(year)) {
         messagesDiv.className = "error";
