@@ -9,14 +9,26 @@
         .container { max-width: 500px; margin: auto; padding: 30px; border: 1px solid #ccc; border-radius: 8px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
         label { display: block; margin-bottom: 5px; font-weight: bold; }
         input[type="text"] { width: calc(100% - 20px); padding: 10px; margin-bottom: 20px; border: 1px solid #ddd; border-radius: 4px; }
-        button { background-color: #007bff; color: white; padding: 12px 20px; border: none; border-radius: 4px; cursor: pointer; font-size: 16px; width: 100%; }
-        button:hover { background-color: #0056b3; }
+        button { background-color: #007bff;
+        color: white;
+        padding: 12px 20px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 16px;
+        display: block;
+        margin: 0 auto; }
         #messages { margin-top: 20px; padding: 10px; border-radius: 4px; }
         .error { background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
         .success { background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
         .card-details-group { display: flex; justify-content: space-between; gap: 10px; }
         .card-details-group > div { flex: 1; }
         .card-details-group input { width: 100%; }
+        .button-wrapper {
+    text-align: right;
+    margin-top: 10px;
+}
+
     </style>
 </head>
 <body>
@@ -30,23 +42,26 @@
 
     <div>
         <label for="accountNumber">Card Number:</label>
-        <input id="accountNumber" type="text" value="4111111111111111" placeholder="Enter 16-digit card number">
+        <input id="accountNumber" type="text" value="4111111111111111" placeholder="Enter your card number">
     </div>
 
     <div class="card-details-group">
         <div>
-            <label for="expirationDate">Expiration Date (MMYY):</label>
-            <input id="expirationDate" type="text" value="1226" placeholder="MMYY">
+            <label for="expirationDate">Expiration Date (YYMM):</label>
+            <input id="expirationDate" type="text" value="2612" placeholder="YYMM">
         </div>
         <div>
             <label for="cvv">CVV:</label>
             <input id="cvv" type="text" value="123" placeholder="CVV">
         </div>
     </div>
+    </div>
 
+<div class="button-wrapper">
     <button onclick="initiatePayment()">Pay Now</button>
+</div>
 
-    <div id="messages"></div>
+<div id="messages"></div>
 
     <form id="paymentForm" method="POST" style="display: none;"></form>
 </div>
