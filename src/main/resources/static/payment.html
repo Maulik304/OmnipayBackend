@@ -95,8 +95,9 @@
         return;
     }
 
-    const month = rawExp.slice(0, 2);
-    const year = rawExp.slice(2, 4);
+   const year = rawExp.slice(0, 2);
+   const month = rawExp.slice(2, 4);
+
 
     if (!/^([0-9*]){4,19}$/.test(accountNumber)) {
     messagesDiv.className = "error";
@@ -107,8 +108,9 @@
 
     if (!/^(0[1-9]|1[0-2])$/.test(month) || !/^\d{2}$/.test(year)) {
         messagesDiv.className = "error";
-        messagesDiv.innerHTML = "Invalid Expiration Date. Format must be MMYY (e.g., 0126).";
-        return;
+        messagesDiv.innerHTML = "Invalid Expiration Date. Format must be YYMM (e.g., 2612).";
+
+       return;
     }
 
     if (!/^\d{3,4}$/.test(cvv)) {
