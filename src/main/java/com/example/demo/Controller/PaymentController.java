@@ -140,9 +140,9 @@ public class PaymentController {
         paymentDataForFrontend.put("payment_url", paymentUrl); // The URL the frontend will post to
         paymentDataForFrontend.put("TAC", tac);                // The essential TAC obtained
         paymentDataForFrontend.put("TRAN_CODE", "SALE");       // For Browser Post, it's TRAN_CODE
-        paymentDataForFrontend.put("TRAN_TYPE", "CREDIT");     // Important for credit card transactions
+            // Important for credit card transactions
         paymentDataForFrontend.put("TRAN_NBR", tranNbr);       // Reuse the same transaction number
-        paymentDataForFrontend.put("REDIRECT_URL", redirectUrl); // Where EPX redirects the user after payment
+         // Where EPX redirects the user after payment
         paymentDataForFrontend.put("CUST_NBR", custNbr);
         paymentDataForFrontend.put("MERCH_NBR", merchNbr);
         paymentDataForFrontend.put("DBA_NBR", dbaNbr);

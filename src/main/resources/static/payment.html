@@ -169,6 +169,8 @@
 
         const form = document.getElementById("paymentForm");
         form.innerHTML = "";
+        // EPX Browser Post Endpoint – required for certification
+       // Value from backend: https://services.epxuap.com/browserpost/
         form.action = data.payment_url;
         form.method = "POST";
 
