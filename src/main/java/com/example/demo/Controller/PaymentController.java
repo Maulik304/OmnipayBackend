@@ -161,7 +161,8 @@ public class PaymentController {
         paymentDataForFrontend.put("ACCOUNT_NBR", accountNumber);
         paymentDataForFrontend.put("CVV2", cvv);
         paymentDataForFrontend.put("EXP_DATE", expDateEpxFormat);
-        paymentDataForFrontend.put("STREET_ADDR", streetAddress); // Required for AVS match
+        paymentDataForFrontend.put("ADDRESS", streetAddress); // ✅ Corrected as per EPX certification
+        // Required for AVS match
         paymentDataForFrontend.put("ZIP_CODE", zipCode);           // Required for AVS match
 // Format: MMYY (e.g., 1226 for Dec 2026)
 
